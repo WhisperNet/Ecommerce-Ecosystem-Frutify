@@ -1,0 +1,29 @@
+<% layout('boilerplate') %>
+
+    <% for(r of orders) {%>
+        <div class="card mx-auto <%= r.status=='Delivered'?" border-success":" border-danger" %> mb-3"
+            style="max-width:
+            35rem;">
+            <div class="card-header">
+                <%= r.status=="Delivered" ?r.status:r.status+" (Delivery Pending)" %>
+            </div>
+            <div class="card-body">
+                <p>Ordered products:
+                <ul>
+                    <% for(product of r.product){ %>
+                        <li>
+                            <%= product %>
+                        </li>
+                        <% } %>
+                </ul>
+                </p>
+                <hr>
+                <p>Total Price: <%= r.price %>
+                </p>
+                <hr>
+                <p>Delivery Address: <%= r.address %>
+                </p>
+
+            </div>
+        </div>
+        <% } %>

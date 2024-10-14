@@ -1,0 +1,26 @@
+<% layout('boilerplate') %>
+
+    <div class="row ">
+        <div class="card mx-auto" style="width: 38rem;">
+            <img src="<%= product.image %>" class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <%= product.name %>
+                </h5>
+                <h6 class="card-subtitle mb-2 text-body-secondary">
+                    <%= product.price %>৳/kg
+                </h6>
+                <p class="card-text">
+                    <%= product.description %>
+                </p>
+                <form class="needs-validation" action="/order/<%= product._id %>" method="post" novalidate>
+                    <div class="input-group mb-3 ">
+                        <input type="number" class="form-control" name="quantity" required>
+                        <span class="input-group-text" id="basic-addon2">kg</span>
+                    </div>
+                    <button class="btn btn-primary">Add to cart</button>
+                </form>
+
+            </div>
+        </div>
+    </div>

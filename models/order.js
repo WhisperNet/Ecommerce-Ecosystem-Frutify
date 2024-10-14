@@ -3,9 +3,8 @@ const Schema = mongoose.Schema;
 
 const orderSchema = new Schema({
     product: {
-        type: String,
+        type: [String],
         required: true,
-        enum: ['Mangoes', 'Bananas', 'Apples']
     },
     price: {
         type: Number,
@@ -15,7 +14,14 @@ const orderSchema = new Schema({
     status: {
         type: String,
         required: true,
-        enum: ['Pending', 'Delivered']
+    },
+    address: {
+        type: String,
+        required: true
+    },
+    phone: {
+        type: String,
+        required: true
     }
 })
 
