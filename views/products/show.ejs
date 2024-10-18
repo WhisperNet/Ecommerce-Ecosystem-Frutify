@@ -1,7 +1,7 @@
 <% layout('boilerplate') %>
-
+    <link rel="stylesheet" href="/css/staribility.css">
     <div class="row ">
-        <div class="card mx-auto" style="width: 38rem;">
+        <div class="col-6" style="width: 38rem;">
             <img src="<%= product.image %>" class="card-img-top" alt="...">
             <div class="card-body">
                 <h5 class="card-title">
@@ -23,4 +23,54 @@
 
             </div>
         </div>
+        <div class="col-6">
+            <h3>Leave a Review:</h3>
+            <form action="/product/<%= product._id %>/review" method="post" class="needs-validation" novalidate>
+                <fieldset class="starability-basic mt-3">
+                    <input type="radio" id="no-rate" class="input-no-rate" name="rating" value="5" checked
+                        aria-label="No rating." />
+                    <input type="radio" id="first-rate1" name="rating" value="1" />
+                    <label for="first-rate1" title="Terrible">1 star</label>
+                    <input type="radio" id="first-rate2" name="rating" value="2" />
+                    <label for="first-rate2" title="Not good">2 stars</label>
+                    <input type="radio" id="first-rate3" name="rating" value="3" />
+                    <label for="first-rate3" title="Average">3 stars</label>
+                    <input type="radio" id="first-rate4" name="rating" value="4" />
+                    <label for="first-rate4" title="Very good">4 stars</label>
+                    <input type="radio" id="first-rate5" name="rating" value="5" />
+                    <label for="first-rate5" title="Amazing">5 stars</label>
+                </fieldset>
+                <div class="form-group mt-0">
+                    <label for="exampleFormControlTextarea1">Comment:</label>
+                    <textarea class="form-control " id="exampleFormControlTextarea1" rows="3" name="body"
+                        required></textarea>
+                </div>
+                <button class="btn btn-success mt-2 mb-4">Submit</button>
+            </form>
+            <% product.review.forEach(element=> { %>
+                <div class="card mb-3" style="width: 38rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <%= element.user.username %>
+                        </h5>
+                        <h6 class="card-subtitle mb-2 text-body-secondary starability-result"
+                            data-rating="<%= element.rating %>">
+
+                        </h6>
+                        <p class="card-text lead">
+                            <%= element.body %>
+                        </p>
+                        <% if(currentUser._id.toString()===element.user._id.toString()){ %>
+                            <form action="/product/<%= product._id %>/review/<%=element._id%>?_method=delete"
+                                method="post">
+                                <button class="btn btn-danger">Delete</button>
+                            </form>
+                            <% } %>
+                    </div>
+                </div>
+                <% }); %>
+        </div>
+
     </div>
+
+    <!--  -->

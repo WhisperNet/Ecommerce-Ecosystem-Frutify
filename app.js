@@ -22,6 +22,7 @@ const { isLoggedIn, isValidUser, isValidOrder, isValidProduct, isValidReview } =
 const userRoutes = require('./routes/user')
 const productRotes = require('./routes/product')
 const orderRoutes = require('./routes/order')
+const reviewRoutes = require('./routes/review')
 
 const mongoUrl = process.env.mongoUrl || 'mongodb://localhost:27017/fruitifyDB';
 mongoose.connect(mongoUrl)
@@ -72,6 +73,7 @@ app.get('/', (req, res) => {
 app.use('/user', userRoutes)
 app.use('/product', productRotes)
 app.use('/order', orderRoutes)
+app.use('/product/:id/review', reviewRoutes)
 
 // app.post('/order/:id', isLoggedIn, (req, res) => {
 //     const id = req.params.id
