@@ -19,7 +19,9 @@ const Order = require('./models/order')
 const axios = require('axios');
 const ExpressError = require('./utils/error')
 const { isLoggedIn, isValidUser, isValidOrder, isValidProduct, isValidReview } = require('./utils/middleware')
-
+const userRoutes = require('./routes/user')
+const productRotes = require('./routes/product')
+const orderRoutes = require('./routes/order')
 
 const mongoUrl = process.env.mongoUrl || 'mongodb://localhost:27017/fruitifyDB';
 mongoose.connect(mongoUrl)
@@ -67,144 +69,94 @@ passport.deserializeUser(User.deserializeUser());
 app.get('/', (req, res) => {
     res.render('home');
 })
-app.get('/user/login', (req, res) => {
-    res.render('user/login');
-})
-app.post('/user/login', passport.authenticate('local', { failureRedirect: '/user/login' }), (req, res) => {
-    res.redirect('/product');
-})
-app.get('/user/register', (req, res) => {
-    res.render('user/register');
-})
-app.post('/user/register', isValidUser, wrapAsync(async (req, res) => {
-    const { cashifyUsername, username, password } = req.body;
-    const user = new User({ username, cashifyUsername });
-    const registeredUser = await User.register(user, password);
-    req.login(registeredUser, err => {
-        if (err) return next(err);
-        res.redirect('/product');
-    })
-}))
-app.get('/user/logout', (req, res) => {
-    req.logout((err) => {
-        if (err) {
-            return next(err);
-        }
-        res.redirect('/');
-    });
-})
+app.use('/user', userRoutes)
+app.use('/product', productRotes)
+app.use('/order', orderRoutes)
 
-app.get('/product/new', (req, res) => {
-    res.render('products/new');
-})
-app.post('/product', isValidProduct, wrapAsync(async (req, res) => {
-    const product = new Product(req.body.product)
-    await product.save()
-    res.redirect('/')
-}))
-app.get('/product', isLoggedIn, wrapAsync(async (req, res) => {
-    const products = await Product.find({})
-    res.render('products/index', { products })
-}))
-app.get('/product/:id', wrapAsync(async (req, res) => {
-    const product = await Product.findById(req.params.id)
-    res.render('products/show', { product })
-}))
+// app.post('/order/:id', isLoggedIn, (req, res) => {
+//     const id = req.params.id
+//     const quantity = req.body.quantity
+//     if (!req.session.cart) {
+//         req.session.cart = {}
+//     }
+//     req.session.cart[id] = Math.abs(quantity)
+//     res.redirect('/product')
+// })
 
-// app.get('/cart', wrapAsync(async (req, res) => {
+// app.get('/order/new', isLoggedIn, wrapAsync(async (req, res) => {
+//     let totalPrice = 0
 //     const addedProducts = []
-//     res.send(req.session.cart)
 //     for (let id in req.session.cart) {
 //         const foundProduct = await Product.findById(id)
-//         const { name, price } = foundProduct
-//         addedProducts.push({ name, price, quantity: req.session.cart[id] })
+//         addedProducts.push({ name: foundProduct.name, price: foundProduct.price, quantity: req.session.cart[id] })
+//         const { price } = foundProduct
+//         totalPrice = totalPrice + (price * req.session.cart[id])
 //     }
-//     res.render('cart', { addedProducts })
+//     res.render('order/new', { addedProducts, totalPrice })
 // }))
-app.post('/order/:id', isLoggedIn, (req, res) => {
-    const id = req.params.id
-    const quantity = req.body.quantity
-    if (!req.session.cart) {
-        req.session.cart = {}
-    }
-    req.session.cart[id] = Math.abs(quantity)
-    res.redirect('/product')
-})
+// app.delete('/order', isLoggedIn, (req, res) => {
+//     req.session.cart = {}
+//     res.redirect('/product')
+// })
+// app.post('/order', isLoggedIn, wrapAsync(async (req, res) => {
+//     const orderedProducts = []
+//     let totalPrice = 0
+//     for (let id in req.session.cart) {
+//         const foundProduct = await Product.findById(id)
+//         orderedProducts.push(foundProduct.name)
+//         const { price } = foundProduct
+//         totalPrice = totalPrice + (price * req.session.cart[id])
+//     }
+//     const user = await User.findOne({ username: req.user.username });
+//     const sender = user.cashifyUsername;
+//     const reciever = "admin@frutify";
+//     const amount = totalPrice;
 
-app.get('/order/new', isLoggedIn, wrapAsync(async (req, res) => {
-    let totalPrice = 0
-    const addedProducts = []
-    for (let id in req.session.cart) {
-        const foundProduct = await Product.findById(id)
-        addedProducts.push({ name: foundProduct.name, price: foundProduct.price, quantity: req.session.cart[id] })
-        const { price } = foundProduct
-        totalPrice = totalPrice + (price * req.session.cart[id])
-    }
-    res.render('order/new', { addedProducts, totalPrice })
-}))
-app.delete('/order', isLoggedIn, (req, res) => {
-    req.session.cart = {}
-    res.redirect('/product')
-})
-app.post('/order', isLoggedIn, wrapAsync(async (req, res) => {
-    const orderedProducts = []
-    let totalPrice = 0
-    for (let id in req.session.cart) {
-        const foundProduct = await Product.findById(id)
-        orderedProducts.push(foundProduct.name)
-        const { price } = foundProduct
-        totalPrice = totalPrice + (price * req.session.cart[id])
-    }
-    const user = await User.findOne({ username: req.user.username });
-    const sender = user.cashifyUsername;
-    const reciever = "admin@frutify";
-    const amount = totalPrice;
-
-    const transactionData = {
-        sender,
-        reciever,
-        amount,
-        otp: req.body.otp
-    };
-    let response
-    try {
-        response = await axios.post('http://localhost:3001/transactions', transactionData);
-        console.log(response);
-    } catch (error) {
-        console.error(error.response.data);
-    }
-    req.session.cart = {}
-    const orderData = {
-        product: orderedProducts,
-        price: totalPrice,
-        status: response.data.response,
-        address: req.body.address,
-        phone: req.body.phone
-    }
-    const order = new Order(orderData)
-    user.order.push(order)
-    console.log(order)
-    await user.save()
-    await order.save()
-    // await axios.post('http://localhost:3003/order', {...order,orderKey:process.env.ORDER_KEY});
-    res.redirect('/product')
-}))
-app.get('/order', isLoggedIn, wrapAsync(async (req, res) => {
-    const user = await User.findById(req.user._id).populate('order')
-    console.log(user.order)
-    res.render('order/index', { orders: user.order })
-}))
-app.put('/order', wrapAsync(async (req, res) => {
-    const { orderKey, status, id } = req.body
-    if (orderKey === process.env.ORDER_KEY) {
-        const order = await Order.findById(id)
-        order.status = status
-        await order.save()
-        res.status(200).send("Success")
-    } else {
-        res.status(400).send("Failder")
-    }
-}))
+//     const transactionData = {
+//         sender,
+//         reciever,
+//         amount,
+//         otp: req.body.otp
+//     };
+//     let response
+//     try {
+//         response = await axios.post('http://localhost:3001/transactions', transactionData);
+//         console.log(response);
+//     } catch (error) {
+//         console.error(error.response.data);
+//     }
+//     req.session.cart = {}
+//     const orderData = {
+//         product: orderedProducts,
+//         price: totalPrice,
+//         status: response.data.response,
+//         address: req.body.address,
+//         phone: req.body.phone
+//     }
+//     const order = new Order(orderData)
+//     user.order.push(order)
+//     console.log(order)
+//     await user.save()
+//     await order.save()
+//     // await axios.post('http://localhost:3003/order', {...order,orderKey:process.env.ORDER_KEY});
+//     res.redirect('/product')
+// }))
+// app.get('/order', isLoggedIn, wrapAsync(async (req, res) => {
+//     const user = await User.findById(req.user._id).populate('order')
+//     console.log(user.order)
+//     res.render('order/index', { orders: user.order })
+// }))
+// app.put('/order', wrapAsync(async (req, res) => {
+//     const { orderKey, status, id } = req.body
+//     if (orderKey === process.env.ORDER_KEY) {
+//         const order = await Order.findById(id)
+//         order.status = status
+//         await order.save()
+//         res.status(200).send("Success")
+//     } else {
+//         res.status(400).send("Failder")
+//     }
+// }))
 app.all('*', (req, res) => {
     throw new ExpressError("Page Not Found", 404)
 })
