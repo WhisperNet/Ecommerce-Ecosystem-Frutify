@@ -18,7 +18,7 @@ module.exports.createReview = async (req, res) => {
         }
     })
     if (!flag) {
-        // req.flash('error', 'You can only review products you have ordered and received');
+        req.flash('error', 'You can only review products you have ordered and received');
         return res.redirect(`/product/${productID}`);
     }
     const review = new Review(req.body);
@@ -26,6 +26,7 @@ module.exports.createReview = async (req, res) => {
     await review.save();
     foundProduct.review.push(review);
     await foundProduct.save();
+    req.flash('success', 'Review added successfully');
     res.redirect(`/product/${productID}`);
 }
 
@@ -37,5 +38,6 @@ module.exports.deleteReview = async (req, res) => {
     }
     await Product.findByIdAndUpdate(id, { $pull: { review: reviewID } });
     await Review.findByIdAndDelete(reviewID)
+    req.flash('success', 'Review deleted successfully');
     res.redirect(`/product/${id}`);
 }

@@ -8,7 +8,7 @@ const user = require('../controllers/user');
 
 router.route('/login')
     .get(user.loginForm)
-    .post(passport.authenticate('local', { failureRedirect: '/user/login' }), wrapAsync(user.login))
+    .post(passport.authenticate('local', { failureFlash: true, failureRedirect: '/user/login' }), wrapAsync(user.login))
 router.route('/register')
     .get(user.registerForm)
     .post(isValidUser, wrapAsync(user.register))

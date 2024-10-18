@@ -11,5 +11,5 @@ router.route('/')
     .delete(isLoggedIn, order.deleteOrder)
     .post(isLoggedIn, wrapAsync(order.createOrder))
     .get(isLoggedIn, wrapAsync(order.index))
-    .put(isLoggedIn, wrapAsync(order.updateOrder))
+    .put(wrapAsync(order.updateOrder))
 module.exports = router;

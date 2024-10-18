@@ -10,6 +10,7 @@ module.exports.insertintoCart = (req, res) => {
         req.session.cart = {}
     }
     req.session.cart[id] = Math.abs(quantity)
+    req.flash('success', 'Product added to cart')
     res.redirect('/product')
 }
 
@@ -26,6 +27,7 @@ module.exports.newOrder = async (req, res) => {
 }
 module.exports.deleteOrder = (req, res) => {
     req.session.cart = {}
+    req.flash('success', 'Cart cleared')
     res.redirect('/product')
 }
 module.exports.createOrder = async (req, res) => {
@@ -68,12 +70,17 @@ module.exports.createOrder = async (req, res) => {
     await user.save()
     await order.save()
     // await axios.post('http://localhost:3003/order', {...order,orderKey:process.env.ORDER_KEY});
+    req.flash('success', 'Order placed successfully')
     res.redirect('/product')
 }
 module.exports.index = async (req, res) => {
     const user = await User.findById(req.user._id).populate('order')
     res.render('order/index', { orders: user.order })
 }
+
+// this is the api for updating the order status
+// this will be accessed from the sellify app to update the status of the order
+// set the status to Delivered
 module.exports.updateOrder = async (req, res) => {
     const { orderKey, status, id } = req.body
     if (orderKey === process.env.ORDER_KEY) {
