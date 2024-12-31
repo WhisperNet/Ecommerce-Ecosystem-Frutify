@@ -1,6 +1,6 @@
 const { orderSchema, userSchema, productSchema, reviewSchema } = require('./schema')
 const ExpressError = require('./error')
-
+const axios = require('axios')
 module.exports.isValidOrder = (req, res, next) => {
     const { error } = orderSchema.validate(req.body)
     if (error) {
@@ -47,5 +47,19 @@ module.exports.isLoggedIn = (req, res, next) => {
     }
     else {
         next()
+    }
+}
+module.exports.isValidCashifyAccount = async (req, res, next) => {
+    const { cashifyUsername, id } = req.body
+
+    try {
+        const response = await axios.post('http://localhost:3001/verify', { cashifyUsername, id })
+        if (response.data.response === 'User verified') {
+            next()
+        } else {
+            throw new ExpressError('Invalid Cashify Account: Verification failed', 400)
+        }
+    } catch (error) {
+        throw new ExpressError('Invalid Cashify Account: Verification failed', 400)
     }
 }

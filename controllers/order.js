@@ -69,7 +69,12 @@ module.exports.createOrder = async (req, res) => {
     user.order.push(order)
     await user.save()
     await order.save()
-    // await axios.post('http://localhost:3003/order', {...order,orderKey:process.env.ORDER_KEY});
+    try {
+        await axios.post('http://localhost:3003/order', { ...order, orderKey: process.env.ORDER_KEY });
+    } catch (error) {
+        console.error(error.response.data);
+
+    }
     req.flash('success', 'Order placed successfully')
     res.redirect('/product')
 }
